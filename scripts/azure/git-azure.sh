@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # import shared constants and functions
-. shared-contantes.sh
-. shared-functions.sh
+. ../shared/contantes.sh
+. ../shared/functions.sh
 
 sopht_azure_organization="sopht"
 sopht_azure_project="sopht"

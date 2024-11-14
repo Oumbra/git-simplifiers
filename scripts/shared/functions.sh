@@ -1,8 +1,5 @@
 #!/bin/bash
 
-# import shared constants 
-. shared-contantes.sh
-
 function isJson() {
   local maybeJson=$1
   

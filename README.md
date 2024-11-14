@@ -39,14 +39,18 @@ list of shortcuts to speed up and simplify certain Git actions :
 - **gp**: Push current branch to remote (Create only)
 - **gpf**: Push **_force_** current branch to remote
 - **ga**: Amend commit of current branch
-- **gap**: Amand commit and push current branch
-- **gapf**: Amand commit and push **_force_** current branch
+- **gap**: Amend commit and push current branch
+- **gapf**: Amend commit and push **_force_** current branch
 - **grfd**: Rebase current branch from **develop** branch, after updating the **develop** branch
 - **grfs**: Rebase current branch from **staging** branch, after updating the **staging** branch
 - **grfm**: Rebase current branch from **main** branch, after updating the **main** branch
 
-- **gcb**: Remvoe current local branch
+- **gcb**: Remove current local branch
 - **gdb**: Remove remote branch
 - **grb**: Rename current or specified branch in local **and** remote
 - **gcpbe**: Cherry pick specified commit SHA to specified environnments
 - **removeLocalOrphanBranch**: Remove local branches if they don't exist remotely
+
+### Azure
+
+To use 

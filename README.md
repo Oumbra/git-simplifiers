@@ -53,4 +53,14 @@ list of shortcuts to speed up and simplify certain Git actions :
 
 ### Azure
 
-To use 
+To use Azure functions you need to configure a SOPHT_AZURE_ACCESSTOKEN environnment variable.
+
+This token must be have rights :
+
+- Code (Read, write & mange)
+- Connected server
+- Graph (Read)
+- Identity (Read)
+- Member Entitlement Management (Read)
+- Pull Request Threads (Read & write)
+- Work Items (Read, write & mange)

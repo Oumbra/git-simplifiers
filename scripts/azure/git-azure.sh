@@ -1,8 +1,10 @@
 #!/bin/bash
 
+gitazure_script_dir=$(dirname "${BASH_SOURCE[0]}")
+
 # import shared constants and functions
-. ../shared/contantes.sh
-. ../shared/functions.sh
+source "$gitazure_script_dir/../shared/constantes.sh"
+source "$gitazure_script_dir/../shared/functions.sh"
 
 sopht_azure_organization="sopht"
 sopht_azure_project="sopht"

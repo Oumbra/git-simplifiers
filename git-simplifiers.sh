@@ -1,9 +1,11 @@
 #!/bin/bash
 
-. /scripts/shared/constantes.sh
-. /scripts/git-aliases.sh
-. /scripts/git-alias-functions.sh
-. /scripts/azure/git-azure.sh
+git_script_dir=$(dirname "${BASH_SOURCE[0]}")
+
+source "$git_script_dir/scripts/shared/constantes.sh"
+source "$git_script_dir/scripts/git-aliases.sh"
+source "$git_script_dir/scripts/git-aliases-fn.sh"
+source "$git_script_dir/scripts/azure/git-azure.sh"
 
 # Git Cherry Pick Branch Environment
 function gcpbe() {

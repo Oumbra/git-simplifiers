@@ -1,6 +1,6 @@
 #!/bin/bash
 
-git_script_dir=$(dirname "${BASH_SOURCE[0]}")
+git_script_dir=$(dirname "${BASH_SOURCE:-$0}")
 
 source "$git_script_dir/scripts/shared/constantes.sh"
 source "$git_script_dir/scripts/git-aliases.sh"

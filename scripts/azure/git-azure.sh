@@ -1,6 +1,6 @@
 #!/bin/bash
 
-gitazure_script_dir=$(dirname "${BASH_SOURCE[0]}")
+gitazure_script_dir=$(dirname "${BASH_SOURCE:-$0}")
 
 # import shared constants and functions
 source "$gitazure_script_dir/../shared/constantes.sh"

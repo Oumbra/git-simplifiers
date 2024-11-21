@@ -87,6 +87,7 @@ function azureIdentities() {
 }
 
 function azureBranchName() {
+  local commandArgs="$@"
   while [[ $# -gt 0 ]]; do
     case "$1" in
       -e|--env)
@@ -125,7 +126,9 @@ function azureBranchName() {
   done
   
   local env="$env"
-  if [[ "$env" != "develop" && ! "$@" =~ " --env " && ! "$@" =~ " -e " ]]; then local env="develop"; fi
+  # if [[ "$commandArgs" =~ "--env " ]] then echo "have --env option : $env"; fi
+  # if [[ "$commandArgs" =~ "-e " ]] then echo "have -e option : $env"; fi
+  if [[ "$env" != "develop" && ! "$commandArgs" =~ "--env " && ! "$commandArgs" =~ "-e " ]]; then local env="develop"; fi
   
   if [[ -z "$workitem" && -z "$workitemId" ]]; then
     echo -e "${redColor}azureBranchName function need a workitem id or workitem !${resetColor}"
@@ -221,6 +224,7 @@ function gitCommit() {
   }
   if [[ $# == 0 || "$@" =~ "-h" ]]; then gitCommitHelp; return; fi
 
+  local commandArgs="$@"
   while [[ $# -gt 0 ]]; do
     case "$1" in
       -i|--in-place)
@@ -261,7 +265,9 @@ function gitCommit() {
   done
   
   local env="$env"
-  if [[ "$env" != "develop" && ! "$@" =~ " --env " && ! "$@" =~ " -e " ]]; then local env="develop"; fi
+  # if [[ "$commandArgs" =~ "--env " ]] then echo "have --env option : $env"; fi
+  # if [[ "$commandArgs" =~ "-e " ]] then echo "have -e option : $env"; fi
+  if [[ "$env" != "develop" && ! "$commandArgs" =~ "--env " && ! "$commandArgs" =~ "-e " ]]; then local env="develop"; fi
 
   if [[ -z $workitemId ]]; then
     echo -e "${redColor}gitCommit function need a workitem id !${resetColor}"
@@ -322,6 +328,8 @@ function azureCreatePullRequest() {
   }
   if [[ $# == 0 || "$@" =~ " -h " ]]; then azureCreatePullRequestHelp; return; fi
 
+  local commandArgs="$@"
+  local commandArgsCount="$#"
   while [[ $# -gt 0 ]]; do
     case "$1" in
       -s|--source)
@@ -382,7 +390,9 @@ function azureCreatePullRequest() {
   echo -e "${cyanColor}Checking parameters...${resetColor}" 
 
   local env="$env"
-  if [[ "$env" != "develop" && ! "$@" =~ " --env " && ! "$@" =~ " -e " ]]; then local env="develop"; fi
+  # if [[ "$commandArgs" =~ "--env " ]] then echo "have --env option : $env"; fi
+  # if [[ "$commandArgs" =~ "-e " ]] then echo "have -e option : $env"; fi
+  if [[ "$env" != "develop" && ! "$commandArgs" =~ "--env " && ! "$commandArgs" =~ "-e " ]]; then local env="develop"; fi
 
   if [[ "$isInPlace" == true ]]; then
     # recover current branch name
@@ -422,6 +432,7 @@ function azureCreatePullRequest() {
 
   if [[ -n "$workitem" ]]; then 
     local branchName=$( azureBranchName --workitem "$workitem" ${techArg:-} --env "$env" )
+    # echo "\$commandArgsCount: $commandArgsCount, \$commandArgs: $commandArgs, \$env: $env, \$branchName: $branchName"
     local workitemId=$( echo $workitem | jq -r '.id' )
     local workitemUrl=$( echo $workitem | jq -r '.url' )
     local workItemRef=$(jq -c -n --arg workitemId "$workitemId" --arg workitemUrl "$workitemUrl" '[{ "id": $workitemId, "url": $workitemUrl }]')
@@ -430,16 +441,16 @@ function azureCreatePullRequest() {
     local title=$(git log -1 --pretty=%B)
   fi
 
-  echo -e "${cyanColor}Checking remote source branch exists...${resetColor}" 
   local sourceBranch="refs/heads/${source:-$branchName}"
+  echo -e "${cyanColor}Checking remote source branch '$sourceBranch' exists...${resetColor}" 
   local remoteSourceBranchExists=$(git ls-remote --heads origin $sourceBranch)
   if [[ -z "$remoteSourceBranchExists" ]]; then 
     echo -e "${redColor}Source branch '${source:-$branchName}' not exists !${resetColor}"
     return
   fi
 
-  echo -e "${cyanColor}Checking remote target branch exists...${resetColor}" 
   local targetBranch="refs/heads/${target:-$env}"
+  echo -e "${cyanColor}Checking remote target branch '$targetBranch' exists...${resetColor}" 
   local remoteTargetBranchExists=$(git ls-remote --heads origin $targetBranch)
   if [[ -z "$remoteTargetBranchExists" ]]; then 
     echo -e "${redColor}Target branch '${target:-$env}' not exists !${resetColor}"

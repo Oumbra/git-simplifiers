@@ -94,12 +94,17 @@ function gcpbe() {
       return
     fi
 
+    local remoteBranchExists=$(git ls-remote --heads origin $branchName)
     echo -e "${cyanColor}Pushing branch $branchName...${resetColor}"
-    git push -q --set-upstream origin "$branchName"
+    if [[ -z "$remoteBranchExists" ]]; then 
+      git push -q --set-upstream origin "$branchName"
+    else
+      git push -q --force origin "$branchName"
+    fi
     
     if [[ "${buildPullRequest:-false}" == true ]]; then
       echo -e "${cyanColor}Building pull request on $env...${resetColor}"
-      azureCreatePullRequest -e $env -w $workitemId
+      azureCreatePullRequest -e "$env" -w $workitemId
     fi
     echo ""
   done

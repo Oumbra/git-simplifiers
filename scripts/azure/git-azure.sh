@@ -124,6 +124,9 @@ function azureBranchName() {
     esac
   done
   
+  local env="$env"
+  if [[ "$env" != "develop" && ! "$@" =~ " --env " && ! "$@" =~ " -e " ]]; then local env="develop"; fi
+  
   if [[ -z "$workitem" && -z "$workitemId" ]]; then
     echo -e "${redColor}azureBranchName function need a workitem id or workitem !${resetColor}"
     return
@@ -214,12 +217,16 @@ function azureBranchNormalizedTitle() {
 
 function gitCommit() {
   function gitCommitHelp() {
-    echo -e "\nUsage: gitCommit [WORKITEM_ID] [OPTION...] [COMMAND]...\nCreate normalized commit from azure workitem\n\nOptions:\n\t-t, --tech                         Set tech flag for branch name and commit name\n\t-e, --env [develop|staging|main]   Set environment of branch (default: develop)\n\t-p, --push                         Push branch after commit created\n\t-pr, --pull-request                Create pull request for branch on specified environment\nCommands:\n\t-h, --help                         Displays this help and exists\nExamples:\n\tgitCommit 2783\n\tgitCommit 2783 -pr -e main"
+    echo -e "\nUsage: gitCommit [WORKITEM_ID] [OPTION...] [COMMAND]...\nCreate normalized commit from azure workitem\n\nOptions:\n\t-t, --tech                         Set tech flag for branch name and commit name\n\t-i, --in-place                     Set in place flag to create branch from\n\t-e, --env [develop|staging|main]   Set environment of branch (default: develop)\n\t-p, --push                         Push branch after commit created\n\t-pr, --pull-request                Create pull request for branch on specified environment\nCommands:\n\t-h, --help                         Displays this help and exists\nExamples:\n\tgitCommit 2783\n\tgitCommit 2783 -pr -e main"
   }
   if [[ $# == 0 || "$@" =~ "-h" ]]; then gitCommitHelp; return; fi
 
   while [[ $# -gt 0 ]]; do
     case "$1" in
+      -i|--in-place)
+        local isInPlace=true
+        shift # past argument
+        ;;
       -e|--env)
         if [[ ! " ${environments[@]} " =~ " $2 " ]]; then
           echo -e "${redColor}$2 is not a valid environment name ! (${environments[@]})${resetColor}"
@@ -253,7 +260,8 @@ function gitCommit() {
     esac
   done
   
-  local env="${env:-develop}"
+  local env="$env"
+  if [[ "$env" != "develop" && ! "$@" =~ " --env " && ! "$@" =~ " -e " ]]; then local env="develop"; fi
 
   if [[ -z $workitemId ]]; then
     echo -e "${redColor}gitCommit function need a workitem id !${resetColor}"
@@ -275,9 +283,13 @@ function gitCommit() {
 
   if [[ "$currentBranch" != "$branchName" ]]; then
     echo -e "${cyanColor}Creating branch $branchName${resetColor}"
-    git branch -D $env &> /dev/null
-    git checkout -q $env && git pull -q && git fetch -q
+    if [[ "$isInPlace" != true ]]; then 
+      git branch -D $env &> /dev/null
+      git checkout -q $env && git pull -q && git fetch -q
+    fi
     git checkout -q -b $branchName
+  else 
+    echo -e "${cyanColor}Branch \"$branchName\" exists${resetColor}"
   fi
 
   local commitMessage=$(azureBranchNormalizedTitle --workitem "$workitem" ${techArg:-})
@@ -308,7 +320,7 @@ function azureCreatePullRequest() {
   function azureCreatePullRequestHelp() {
     echo -e "Usage: azureCreatePullRequest [OPTION...] [COMMAND]...\nCreate an azure pull request from two branch or a azure workitem\n\nOptions:\n\t-i, --in-place                     Set in place flag to eval source branch and target env\n\t-w, --workitem-id                  Set workitem id\n\t--workitem                         Set workitem object\n\t-s, --source                       Set source branch name\n\t-t, --target                       Set target branch name\n\t-e, --env [develop|staging|main]   Set environment of branch (default: develop)\n\t-t, --tech                         Set tech flag for branch name and commit name\nCommands:\n\t-h, --help                         Displays this help and exists\nExamples:\n\tazureCreatePullRequest -w 2783\n\tazureCreatePullRequest -w 2783 -t\n\tazureCreatePullRequest -w 2783 -e staging\n\tazureCreatePullRequest -s f/dam/2783 -t f/dam/2783-main\n\tazureCreatePullRequestHelp -w 2783 -e main"
   }
-  if [[ $# == 0 || "$@" =~ "-h" ]]; then azureCreatePullRequestHelp; return; fi
+  if [[ $# == 0 || "$@" =~ " -h " ]]; then azureCreatePullRequestHelp; return; fi
 
   while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -369,6 +381,9 @@ function azureCreatePullRequest() {
   
   echo -e "${cyanColor}Checking parameters...${resetColor}" 
 
+  local env="$env"
+  if [[ "$env" != "develop" && ! "$@" =~ " --env " && ! "$@" =~ " -e " ]]; then local env="develop"; fi
+
   if [[ "$isInPlace" == true ]]; then
     # recover current branch name
     local source=$(git symbolic-ref --short HEAD)
@@ -381,7 +396,7 @@ function azureCreatePullRequest() {
     for _env in "${environments[@]}"; do
       local countBranchInEnv=$(git branch --contains $_env 2> /dev/null | fgrep -cw "$source")
       if [[ $countBranchInEnv -eq 1 ]]; then
-        local env=$_env
+        local env="$_env"
         break
       fi
     done
@@ -406,11 +421,11 @@ function azureCreatePullRequest() {
   fi
 
   if [[ -n "$workitem" ]]; then 
-    local branchName=$(azureBranchName --workitem "$workitem" ${techArg:-} ${envArg:-})
+    local branchName=$( azureBranchName --workitem "$workitem" ${techArg:-} --env "$env" )
     local workitemId=$( echo $workitem | jq -r '.id' )
     local workitemUrl=$( echo $workitem | jq -r '.url' )
     local workItemRef=$(jq -c -n --arg workitemId "$workitemId" --arg workitemUrl "$workitemUrl" '[{ "id": $workitemId, "url": $workitemUrl }]')
-    local title=$(azureBranchNormalizedTitle --workitem "$workitem" ${techArg:-})
+    local title=$( azureBranchNormalizedTitle --workitem "$workitem" ${techArg:-} )
   elif [[ -n "$source" ]]; then
     local title=$(git log -1 --pretty=%B)
   fi

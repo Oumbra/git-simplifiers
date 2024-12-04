@@ -26,6 +26,8 @@
 list of shortcuts to speed up and simplify certain Git actions :
 
 - **glo**: Git log oneline 
+- **gco**: Moving to specified branch
+- **gbr**: Show locales branches
 - **gpl**: Git pull
 - **gcd**: Move to **develop** branch, pull it and fecth
 - **gcs**: Move to **staging** branch, pull it and fecth

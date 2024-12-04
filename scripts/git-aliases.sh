@@ -1,6 +1,8 @@
 #!/bin/bash
 
 alias glo='git lo'
+alias gbr='git co'
+alias gbr='git br'
 alias gpl='git pull'
 alias gcd='git co develop && gpl && git fetch'
 alias gcs='git co staging && gpl && git fetch'

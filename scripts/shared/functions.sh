@@ -25,5 +25,5 @@ function randomAlphaNumeric() {
     local length=40
   fi
 
-  tr -dc A-Za-z0-9 </dev/urandom | head -c $length; echo
+  cat /dev/urandom | LC_ALL=C tr -dc 'a-zA-Z0-9' | head -c $length
 }

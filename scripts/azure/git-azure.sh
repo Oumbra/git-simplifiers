@@ -15,7 +15,7 @@ function azureRestApi() {
   local url=$1
   local jsonBody=$2
 
-  if [[ -z $url ]]; then
+  if [[ -z "$url" ]]; then
     echo -e "${redColor}azureRestApi function need a url !${resetColor}"
     return
   fi
@@ -28,14 +28,17 @@ function azureRestApi() {
   if [[ -z "$jsonBody" ]]; then local method="GET"; else local method="POST"; fi
 
   local fullUrl="https://dev.azure.com/$sopht_azure_organization/$sopht_azure_project/_apis/$url"
+  local filePath="/tmp/$(randomAlphaNumeric)"
   
-  echo -e "fullUrl: $fullUrl\nmethod: $method\nBasic $(echo -n ":$SOPHT_AZURE_ACCESSTOKEN" | base64)\nbody: $jsonBody" > ~/git-utils.log
+  echo -e "fullUrl: $fullUrl\nmethod: $method\nBasic $(echo -n ":$SOPHT_AZURE_ACCESSTOKEN" | base64)\nfile path: $filePath\nbody: $jsonBody" > ~/git-simplifiers.log
 
   curl -s -X $method \
     -H "Content-Type: application/json" \
     -H "Authorization: Basic $(echo -n ":$SOPHT_AZURE_ACCESSTOKEN" | base64)" \
     -d "${jsonBody:-}" \
-    $fullUrl
+    $fullUrl > $filePath
+
+    echo $filePath
 }
 
 function azureRepositoryId() {
@@ -46,9 +49,9 @@ function azureRepositoryId() {
   fi
 
   # Appel de l'API pour lister les dépôts
-  local response=$(azureRestApi "git/repositories?api-version=7.1-preview.1")
+  local responsePath=$(azureRestApi "git/repositories?api-version=7.1-preview.1")
 
-  echo "$response" | jq -r '.value[] | select(.name == "'$repositoryName'") | .id'
+  jq -r '.value[] | select(.name == "'$repositoryName'") | .id' "$responsePath"
 }
 
 function azureWorkItem() {
@@ -59,20 +62,20 @@ function azureWorkItem() {
     return
   fi
 
-  local response=$(azureRestApi "wit/workitems/$workitemId?api-version=7.1-preview.3")
-  if [[ $(isJson "$response") == 1 ]]; then
-    echo -e "${redColor}Impossible to recover workitem #$workitemId :\n${response}${resetColor}"
+  local responsePath=$(azureRestApi "wit/workitems/$workitemId?api-version=7.1-preview.3")
+  if [[ $(isJson "$responsePath") == 1 ]]; then
+    echo -e "${redColor}Impossible to recover workitem #$workitemId :\n$responsePath${resetColor}"
     return 1
   fi
 
-  local workitemNotExists=$(echo "$response" | jq -e 'has("message")' )
+  local workitemNotExists=$(jq -e 'has("message")' "$responsePath")
   if [[ $workitemNotExists == true ]]; then
-    local message=$( echo $response | jq -r '.message' )
+    local message=$( jq -r '.message' "$responsePath" )
     echo -e "${redColor}${message}${resetColor}"
     return 1
   fi
 
-  echo "$response"
+  echo $responsePath
 }
 
 # Not working now
@@ -142,9 +145,14 @@ function azureBranchName() {
       return
     fi
   fi
+
+  if [[ -f "$workitem" ]]; then
+    local workitemType=$( jq -r '.fields."System.WorkItemType"' "$workitem" )
+  else
+    local workitemType=$( echo $workitem | jq -r '.fields."System.WorkItemType"' )
+  fi
   
   local trigram=$(cd ~ && pwd | perl -pe 's/.*\/([^\/]{3}).*$/\L$1/g')
-  local workitemType=$( echo $workitem | jq -r '.fields."System.WorkItemType"' )
 
   case "$workitemType" in
     "Bug") local branchType="fix";;
@@ -199,13 +207,19 @@ function azureBranchNormalizedTitle() {
   if [[ -z "$workitem" ]]; then
     local workitem=$(azureWorkItem $workitemId)
     if [[ $(isJson "$workitem") == 1 ]]; then
-      echo -e "${redColor}${workitem}${resetColor}"
+      echo -e "${redColor}$workitem${resetColor}"
       return
     fi
   fi
 
-  local workitemTitle=$( echo $workitem | jq -r '.fields."System.Title"' )
-  local workitemType=$( echo $workitem | jq -r '.fields."System.WorkItemType"' )
+  if [[ -f "$workitem" ]]; then
+    local workitemTitle=$( jq -r '.fields."System.Title"' "$workitem" )
+    local workitemType=$( jq -r '.fields."System.WorkItemType"' "$workitem" )
+  else
+    local workitemTitle=$( echo $workitem | jq -r '.fields."System.Title"' )
+    local workitemType=$( echo $workitem | jq -r '.fields."System.WorkItemType"' )
+  fi
+
   case "$workitemType" in
     "Bug") local commitType="Fix";;
     *) 
@@ -278,7 +292,7 @@ function gitCommit() {
   echo -e "${cyanColor}Recover work item #${workitemId}${resetColor}" 
   local workitem=$(azureWorkItem $workitemId)
   if [[ $(isJson "$workitem") == 1 ]]; then
-    echo -e "${redColor}${workitem}${resetColor}"
+    echo -e "${redColor}$workitem${resetColor}"
     return
   fi
 
@@ -432,11 +446,16 @@ function azureCreatePullRequest() {
 
   if [[ -n "$workitem" ]]; then 
     local branchName=$( azureBranchName --workitem "$workitem" ${techArg:-} --env "$env" )
-    # echo "\$commandArgsCount: $commandArgsCount, \$commandArgs: $commandArgs, \$env: $env, \$branchName: $branchName"
-    local workitemId=$( echo $workitem | jq -r '.id' )
-    local workitemUrl=$( echo $workitem | jq -r '.url' )
-    local workItemRef=$(jq -c -n --arg workitemId "$workitemId" --arg workitemUrl "$workitemUrl" '[{ "id": $workitemId, "url": $workitemUrl }]')
     local title=$( azureBranchNormalizedTitle --workitem "$workitem" ${techArg:-} )
+    # echo "\$commandArgsCount: $commandArgsCount, \$commandArgs: $commandArgs, \$env: $env, \$branchName: $branchName"
+    if [[ -f "$workitem" ]]; then
+      local workitemId=$( jq -r '.id' "$workitem" )
+      local workitemUrl=$( jq -r '.url' "$workitem" )
+    else
+      local workitemId=$( echo $workitem | jq -r '.id' )
+      local workitemUrl=$( echo $workitem | jq -r '.url' )
+    fi
+    local workItemRef=$(jq -c -n --arg workitemId "$workitemId" --arg workitemUrl "$workitemUrl" '[{ "id": $workitemId, "url": $workitemUrl }]')
   elif [[ -n "$source" ]]; then
     local title=$(git log -1 --pretty=%B)
   fi

@@ -36,7 +36,7 @@ list of shortcuts to speed up and simplify certain Git actions :
 - **grd**: Rebase current branch from **develop** branch
 - **grs**: Rebase current branch from **staging** branch
 - **grm**: Rebase current branch from **main** branch
-- **grc**: Continue current rebase # /!\ evol to no edit /!\
+- **grbc**: Continue current rebase # /!\ evol to no edit /!\
 - **gcpc**: Continue current cherry-pick  # /!\ evol to no edit /!\
 - **gp**: Push current branch to remote (Create only)
 - **gpf**: Push **_force_** current branch to remote

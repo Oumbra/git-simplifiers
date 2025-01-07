@@ -500,14 +500,14 @@ function azureCreatePullRequest() {
     return
   fi
 
-  local hasCreationError=$(echo "$response" | jq -e 'has("message")' )
+  local hasCreationError=$(jq -e 'has("message")' "$response")
   if [[ $hasCreationError == true ]]; then
-    local message=$( echo $response | jq -r '.message' )
+    local message=$(jq -r '.message' "$response")
     echo -e "${redColor}${message}${resetColor}"
     return 1
   fi
 
-  local pullRequestId=$(echo $response | jq -r '.pullRequestId')
+  local pullRequestId=$(jq -r '.pullRequestId' "$response")
   local pullRequestUrl="https://dev.azure.com/$sopht_azure_organization/$sopht_azure_project/_git/$sopht_azure_repository/pullrequest/$pullRequestId"
   echo -e "${greenColor}Pull request created: $pullRequestUrl${resetColor}"
 

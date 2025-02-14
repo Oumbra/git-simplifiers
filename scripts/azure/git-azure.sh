@@ -497,6 +497,7 @@ function azureCreatePullRequest() {
   local response=$(azureRestApi "git/repositories/$sopht_azure_repository_id/pullRequests?api-version=7.1" "$jsonBody")
   if [[ $(isJson "$response") == 1 ]]; then
     echo -e "${redColor}${response}${resetColor}"
+    echo -e "${redColor}sended json :\n${jsonBody}${resetColor}"
     return
   fi
 
@@ -504,6 +505,7 @@ function azureCreatePullRequest() {
   if [[ $hasCreationError == true ]]; then
     local message=$(jq -r '.message' "$response")
     echo -e "${redColor}${message}${resetColor}"
+    echo -e "${redColor}sended json :\n${jsonBody}${resetColor}"
     return 1
   fi
 

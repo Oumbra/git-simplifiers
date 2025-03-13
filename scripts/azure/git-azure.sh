@@ -83,7 +83,7 @@ function azureWorkItem() {
 function azureIdentities() {
   curl GET \
     -H "Content-Type: application/json" \
-    -H "Authorization: Basic $(echo -n ":$sopht_azure_accessToken" | base64)" \
+    -H "Authorization: Basic $(echo -n ":$SOPHT_AZURE_ACCESSTOKEN" | base64)" \
     "https://vssps.dev.azure.com/$sopht_azure_organization/_apis/graph/users/?api-version=7.2-preview.1"
     # "https://dev.azure.com/$sopht_azure_organization/_apis/graph/descriptors/user?api-version=7.1-preview.3"
     # "https://dev.azure.com/$sopht_azure_organization/_apis/identities?api-version=7.2-preview.1"
@@ -338,7 +338,7 @@ function gitCommit() {
 # https://learn.microsoft.com/en-us/rest/api/azure/devops/git/pull-requests/create?view=azure-devops-rest-7.1&tabs=HTTP
 function azureCreatePullRequest() {
   function azureCreatePullRequestHelp() {
-    echo -e "Usage: azureCreatePullRequest [OPTION...] [COMMAND]...\nCreate an azure pull request from two branch or a azure workitem\n\nOptions:\n\t-i, --in-place                     Set in place flag to eval source branch and target env\n\t-w, --workitem-id                  Set workitem id\n\t--workitem                         Set workitem object\n\t-s, --source                       Set source branch name\n\t-t, --target                       Set target branch name\n\t-e, --env [develop|staging|main]   Set environment of branch (default: develop)\n\t-t, --tech                         Set tech flag for branch name and commit name\nCommands:\n\t-h, --help                         Displays this help and exists\nExamples:\n\tazureCreatePullRequest -w 2783\n\tazureCreatePullRequest -w 2783 -t\n\tazureCreatePullRequest -w 2783 -e staging\n\tazureCreatePullRequest -s f/dam/2783 -t f/dam/2783-main\n\tazureCreatePullRequestHelp -w 2783 -e main"
+    echo -e "Usage: azureCreatePullRequest [OPTION...] [COMMAND]...\nCreate an azure pull request from two branch or a azure workitem\n\nOptions:\n\t-i, --in-place                     Set in place flag to eval source branch and target env\n\t-w, --workitem-id                  Set workitem id\n\t--workitem                         Set workitem object\n\t-s, --source                       Set source branch name\n\t-t, --target                       Set target branch name\n\t-e, --env [develop|staging|main]   Set environment of branch (default: develop)\n\t-t, --tech                         Set tech flag for branch name and commit name\nCommands:\n\t-h, --help                         Displays this help and exists\nExamples:\n\tazureCreatePullRequest -w 2783\n\tazureCreatePullRequest -w 2783 -t\n\tazureCreatePullRequest -w 2783 -e staging\n\tazureCreatePullRequest -s f/dam/2783 -t f/dam/2783-main\n\tazureCreatePullRequest -w 2783 -e main"
   }
   if [[ $# == 0 || "$@" =~ " -h " ]]; then azureCreatePullRequestHelp; return; fi
 

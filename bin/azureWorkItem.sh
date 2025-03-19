@@ -3,20 +3,15 @@
 script_dir=$(dirname $0)
 root_dir=$(echo $script_dir | perl -pe 's/^(.+)\/bin.*$/$1/g')
 
-source "$root_dir/shared/constantes.sh"
-source "$root_dir/shared/azure/azureRestApi.sh"
+source "$root_dir/shared/alias.sh"
 
 function azureWorkItem() {
-  local workitemId=$1
-  
-  if [[ -z $workitemId ]]; then
-    echo -e "${redColor}azureWorkItem function need a workitem id !${resetColor}"
-    return
-  fi
+  if [[ $(needToCallHelpFunction $@) == 1 ]]; then azureWorkItemHelp; return; fi
 
-  local responsePath=$(azureRestApi "wit/workitems/$workitemId?api-version=7.1-preview.3")
+  local workitemId=$1
+  local responsePath=$(azureRestApi.sh "wit/workitems/$workitemId?api-version=7.1-preview.3")
   if [[ $(isJson "$responsePath") == 1 ]]; then
-    echo -e "${redColor}Impossible to recover workitem #$workitemId :\n$responsePath${resetColor}"
+    echo -e "${redColor}Cannot recover workitem #$workitemId :\n$responsePath${resetColor}"
     return 1
   fi
 

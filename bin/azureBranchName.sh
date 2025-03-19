@@ -3,11 +3,10 @@
 script_dir=$(dirname $0)
 root_dir=$(echo $script_dir | perl -pe 's/^(.+)\/bin.*$/$1/g')
 
-source "$root_dir/shared/constantes.sh"
-source "$root_dir/bin/azureWorkItem.sh"
+source "$root_dir/shared/alias.sh"
 
 function azureBranchName() {
-  if [[ $# == 0 || "$@" =~ " -h " || $# == 1 && $1 == '-h' ]]; then azureBranchNameHelp; return; fi
+  if [[ $(needToCallHelpFunction $@) == 1 ]]; then azureBranchNameHelp; return; fi
 
   local commandArgs="$@"
   while [[ $# -gt 0 ]]; do
@@ -58,7 +57,7 @@ function azureBranchName() {
   fi
 
   if [[ -z "$workitem" ]]; then
-    local workitem=$(azureWorkItem $workitemId)
+    local workitem=$(azureWorkItem.sh $workitemId)
     if [[ $(isJson "$workitem") == 1 ]]; then
       echo -e "${redColor}${workitem}${resetColor}"
       return

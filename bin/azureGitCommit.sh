@@ -3,14 +3,10 @@
 script_dir=$(dirname $0)
 root_dir=$(echo $script_dir | perl -pe 's/^(.+)\/bin.*$/$1/g')
 
-source "$root_dir/shared/constantes.sh"
-source "$root_dir/bin/azureWorkItem.sh"
-source "$root_dir/bin/azureBranchName.sh"
-source "$root_dir/bin/azureBranchNormalizedTitle.sh"
-source "$root_dir/bin/azureCreatePullRequest.sh"
+source "$root_dir/shared/alias.sh"
 
 function azureGitCommit() {
-  if [[ $# == 0 || "$@" =~ " -h " || $# == 1 && $1 == '-h' ]]; then azureGitCommitHelp; return; fi
+  if [[ $(needToCallHelpFunction $*) == 1 ]]; then azureGitCommitHelp; return; fi
 
   local commandArgs="$@"
   while [[ $# -gt 0 ]]; do
@@ -20,8 +16,8 @@ function azureGitCommit() {
         shift # past argument
         ;;
       -e|--env)
-        if [[ ! " ${environments[@]} " =~ " $2 " ]]; then
-          echo -e "${redColor}$2 is not a valid environment name ! (${environments[@]})${resetColor}"
+        if [[ ! " ${environments[*]} " =~ " $2 " ]]; then
+          echo -e "${redColor}$2 is not a valid environment name ! (${environments[*]})${resetColor}"
           return
         fi
         local env=$2
@@ -62,7 +58,7 @@ function azureGitCommit() {
   
   # recover ticket information on Azure
   echo -e "${cyanColor}Recover work item #${workitemId}${resetColor}" 
-  local workitem=$(azureWorkItem $workitemId)
+  local workitem=$( azureWorkItem.sh $workitemId )
   if [[ $(isJson "$workitem") == 1 ]]; then
     echo -e "${redColor}$workitem${resetColor}"
     return
@@ -70,7 +66,7 @@ function azureGitCommit() {
 
   if [[ "$isTechWork" == true ]]; then local techArg="--tech"; fi
 
-  local branchName=$(azureBranchName --workitem "$workitem" ${techArg:-} -e $env)
+  local branchName=$( azureBranchName.sh --workitem "$workitem" ${techArg:-} -e $env )
   local currentBranch=$(git symbolic-ref --short HEAD)
 
   if [[ "$currentBranch" != "$branchName" ]]; then
@@ -84,7 +80,7 @@ function azureGitCommit() {
     echo -e "${cyanColor}Branch \"$branchName\" exists${resetColor}"
   fi
 
-  local commitMessage=$(azureBranchNormalizedTitle --workitem "$workitem" ${techArg:-})
+  local commitMessage=$( azureBranchNormalizedTitle.sh --workitem "$workitem" ${techArg:-} )
 
   echo -e "${cyanColor}Creating commit $commitMessage${resetColor}"
   git add -A &> /dev/null
@@ -103,7 +99,7 @@ function azureGitCommit() {
 
   if [[ "${buildPullRequest:-false}" == true ]]; then
     echo -e "${cyanColor}Building pull request on $env${resetColor}"
-    azureCreatePullRequest -e $env --workitem "$workitem"
+    azureCreatePullRequest.sh -e $env --workitem "$workitem"
   fi
 }
 

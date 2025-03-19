@@ -3,16 +3,30 @@
 script_dir=$(dirname $0)
 root_dir=$(echo $script_dir | perl -pe 's/^(.+)\/bin.*$/$1/g')
 
-# TODO 
+source "$root_dir/shared/alias.sh"
+
 function gitDeleteRemoteBranch() {
-  if [[ -n "$1" ]]; then
-    git push origin --delete "$1"
+  if [[ $(needToCallHelpFunction $@) == 1 ]]; then gitDeleteRemoteBranchHelp; return; fi
+
+  local branchName=$1
+  
+  if [[ -z $branchName ]]; then
+    echo -e "${redColor}gitDeleteRemoteBranch command need a branch name !${resetColor}"
+    return
   fi
+  
+  git push origin --delete "$1"
 }
 
 function gitDeleteRemoteBranchHelp() {
     echo -e "
-# Git delete branch : supprime la branche désigné en remote (sur le serveur)
+Usage: gitDeleteRemoteBranchHelp BRANCH_NAME
+Delete remote branch by name
+
+Commands:
+    -h, --help                         Displays this help and exists
+Examples:
+    gitDeleteRemoteBranchHelp f/tri/2783
 "
 }
 

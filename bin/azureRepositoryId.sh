@@ -3,20 +3,32 @@
 script_dir=$(dirname $0)
 root_dir=$(echo $script_dir | perl -pe 's/^(.+)\/bin.*$/$1/g')
 
-source "$root_dir/shared/constantes.sh"
-source "$root_dir/shared/azure/azureRestApi.sh"
+source "$root_dir/shared/alias.sh"
 
-function __azureRepositoryId() {
+function azureRepositoryId() {
+    if [[ $(needToCallHelpFunction $@) == 1 ]]; then azureRepositoryIdHelp; return; fi
+    
     local repositoryName=$1
-    if [[ -z $repositoryName ]]; then
-    echo -e "${redColor}azureRepositoryId function need a repository name !${resetColor}"
-    return
-    fi
-
     # Appel de l'API pour lister les dépôts
-    local responsePath=$(azureRestApi "git/repositories?api-version=7.1-preview.1")
+    local responsePath=$( azureRestApi.sh "git/repositories?api-version=7.1-preview.1" )
 
     jq -r '.value[] | select(.name == "'$repositoryName'") | .id' "$responsePath"
 }
 
-__azureRepositoryId $*
+function azureRepositoryIdHelp() {
+    echo "
+Usage: azureRepositoryId REPOSITORY_NAME
+Return id of repository
+
+Arguments:
+    Repository Name             Is mandatory
+Commands:
+    -h, --help                  Displays this help and exists
+Examples:
+    azureRepositoryId sopht
+"
+}
+
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+    azureRepositoryId $*
+fi

@@ -3,15 +3,31 @@
 script_dir=$(dirname $0)
 root_dir=$(echo $script_dir | perl -pe 's/^(.+)\/bin.*$/$1/g')
 
-sopht_azure_organization="sopht"
+source "$root_dir/shared/alias.sh"
 
 function azureIdentities() {
-  curl GET \
-    -H "Content-Type: application/json" \
-    -H "Authorization: Basic $(echo -n ":$SOPHT_AZURE_ACCESSTOKEN" | base64)" \
-    "https://vssps.dev.azure.com/$sopht_azure_organization/_apis/identities?api-version=7.2-preview.1"
-    # &searchFilter=MailAddress&filterValue=damien.amoury@sopht.com
-    # "https://vssps.dev.azure.com/$sopht_azure_organization/_apis/graph/users/?api-version=7.2-preview.1"
+    if [[ $(needToCallHelpFunctionWithoutArgs $@) == 1 ]]; then azureIdentitiesHelp; return; fi
+
+    local token
+    token=$( getAzureToken; exit $? )
+    local cmdState=$?
+    if [[ $cmdState -gt 0 ]]; then 
+        echo "$token"
+        return $cmdState
+    fi
+
+    local organization
+    organization=$( getAzureOrganizaton; exit $? )
+    local cmdState=$?
+    if [[ $cmdState -gt 0 ]]; then
+        echo "$organization"
+        return $cmdState
+    fi
+
+    curl -s -X GET \
+        -H "Content-Type: application/json" \
+        -H "Authorization: Basic $(echo -n ":$token" | base64)" \
+        "https://vssps.dev.azure.com/$organization/_apis/identities?api-version=7.2-preview.1"
 }
 
 function azureIdentitiesHelp() {

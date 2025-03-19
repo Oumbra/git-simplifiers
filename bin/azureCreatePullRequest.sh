@@ -3,20 +3,51 @@
 script_dir=$(dirname $0)
 root_dir=$(echo $script_dir | perl -pe 's/^(.+)\/bin.*$/$1/g')
 
-source "$root_dir/shared/constantes.sh"
-source "$root_dir/shared/azure/azureRestApi.sh"
-source "$root_dir/bin/azureWorkItem.sh"
-source "$root_dir/bin/azureBranchName.sh"
-source "$root_dir/bin/azureBranchNormalizedTitle.sh"
-
-# sopht_azure_organization="sopht"
-# sopht_azure_project="sopht"
-sopht_azure_repository="monorepo"
-sopht_azure_repository_id="79a2b0c0-14d8-4a0c-86ad-2bec24d9ccd5"
+source "$root_dir/shared/alias.sh"
 
 # https://learn.microsoft.com/en-us/rest/api/azure/devops/git/pull-requests/create?view=azure-devops-rest-7.1&tabs=HTTP
 function azureCreatePullRequest() {
-  if [[ $# == 0 || "$@" =~ " -h " || $# == 1 && $1 == '-h' ]]; then azureCreatePullRequestHelp; return; fi
+  if [[ $(needToCallHelpFunction $@) == 1 ]]; then azureCreatePullRequestHelp; return; fi
+
+  local email
+  email=$( getUserEmail; exit $? )
+  local cmdState=$?
+  if [[ $cmdState -gt 0 ]]; then 
+      echo "$email"
+      return $cmdState
+  fi
+
+  local organization
+  organization=$( getAzureOrganizaton; exit $? )
+  local cmdState=$?
+  if [[ $cmdState -gt 0 ]]; then 
+      echo "$organization"
+      return $cmdState
+  fi
+
+  local project
+  project=$( getAzureProject; exit $? )
+  local cmdState=$?
+  if [[ $cmdState -gt 0 ]]; then 
+      echo "$project"
+      return $cmdState
+  fi
+
+  local repository
+  repository=$( getAzureRepository; exit $? )
+  local cmdState=$?
+  if [[ $cmdState -gt 0 ]]; then 
+      echo "$repository"
+      return $cmdState
+  fi
+
+  local repositoryId
+  repositoryId=$( getAzureRepositoryId; exit $? )
+  local cmdState=$?
+  if [[ $cmdState -gt 0 ]]; then 
+      echo "$repositoryId"
+      return $cmdState
+  fi
 
   local commandArgs="$@"
   local commandArgsCount="$#"
@@ -111,7 +142,7 @@ function azureCreatePullRequest() {
   fi
 
   if [[ -n "$workitemId" ]]; then
-      local workitem=$(azureWorkItem $workitemId)
+      local workitem=$( azureWorkItem.sh $workitemId )
       if [[ $(isJson "$workitem") == 1 ]]; then
         echo -e "${redColor}${workitem}${resetColor}"
         return
@@ -119,8 +150,8 @@ function azureCreatePullRequest() {
   fi
 
   if [[ -n "$workitem" ]]; then 
-    local branchName=$( azureBranchName --workitem "$workitem" ${techArg:-} --env "$env" )
-    local title=$( azureBranchNormalizedTitle --workitem "$workitem" ${techArg:-} )
+    local branchName=$( azureBranchName.sh --workitem "$workitem" ${techArg:-} --env "$env" )
+    local title=$( azureBranchNormalizedTitle.sh --workitem "$workitem" ${techArg:-} )
     # echo "\$commandArgsCount: $commandArgsCount, \$commandArgs: $commandArgs, \$env: $env, \$branchName: $branchName"
     if [[ -f "$workitem" ]]; then
       local workitemId=$( jq -r '.id' "$workitem" )
@@ -151,7 +182,7 @@ function azureCreatePullRequest() {
   fi
 
   #  TODO ADD identifierRef to autocomplete and reviewer
-  local identityRef=""
+  local identityRef=$( azureUserIdentity.sh $email )
 
   echo -e "${cyanColor}Preparing pull request creation...${resetColor}" 
   # TODO trouvé un moyen de récupérer la liste des reviewers possible et de les rendre sélectionnable
@@ -161,7 +192,7 @@ function azureCreatePullRequest() {
     --arg sourceBranch "$sourceBranch" \
     --arg targetBranch "$targetBranch" \
     --argjson workItemRef ${workItemRef:-'[]'} \
-    --arg identityRef "$identityRef" \
+    --argjson identityRef "$identityRef" \
     '{
       "sourceRefName": $sourceBranch,
       "targetRefName": $targetBranch,
@@ -173,7 +204,7 @@ function azureCreatePullRequest() {
   )
 
   echo -e "${cyanColor}Creating pull request...${resetColor}" 
-  local response=$(azureRestApi "git/repositories/$sopht_azure_repository_id/pullRequests?api-version=7.1" "$jsonBody")
+  local response=$( azureRestApi.sh "git/repositories/$repositoryId/pullRequests?api-version=7.1" "$jsonBody" )
   if [[ $(isJson "$response") == 1 ]]; then
     echo -e "${redColor}${response}${resetColor}"
     echo -e "${redColor}sended json :\n${jsonBody}${resetColor}"
@@ -189,7 +220,7 @@ function azureCreatePullRequest() {
   fi
 
   local pullRequestId=$(jq -r '.pullRequestId' "$response")
-  local pullRequestUrl="https://dev.azure.com/$sopht_azure_organization/$sopht_azure_project/_git/$sopht_azure_repository/pullrequest/$pullRequestId"
+  local pullRequestUrl="https://dev.azure.com/$organization/$project/_git/$repository/pullrequest/$pullRequestId"
   echo -e "${greenColor}Pull request created: $pullRequestUrl${resetColor}"
 
   echo -e "${cyanColor}Clearing local branch '${source:-$branchName}'...${resetColor}" 

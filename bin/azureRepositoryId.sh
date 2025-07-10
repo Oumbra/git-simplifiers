@@ -12,7 +12,7 @@ function azureRepositoryId() {
     # Appel de l'API pour lister les dépôts
     local responsePath=$( azureRestApi.sh "git/repositories?api-version=7.1-preview.1" )
 
-    jq -r '.value[] | select(.name == "'$repositoryName'") | .id' "$responsePath"
+    jqAlias -r '.value[] | select(.name == "'$repositoryName'") | .id' "$responsePath"
 }
 
 function azureRepositoryIdHelp() {
@@ -30,5 +30,5 @@ Examples:
 }
 
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
-    azureRepositoryId $*
+    azureRepositoryId "$@"
 fi

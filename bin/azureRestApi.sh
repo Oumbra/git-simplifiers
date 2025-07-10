@@ -6,13 +6,13 @@ root_dir=$(echo $script_dir | perl -pe 's/^(.+)\/bin.*$/$1/g')
 source "$root_dir/shared/alias.sh"
 
 function azureRestApi() {
-  if [[ $(needToCallHelpFunction $*) == 1 ]]; then azureBranchNameHelp; return; fi
+    if [[ $(needToCallHelpFunction "$@") == 1 ]]; then azureRestApiHelp; return; fi
   
     local url=$1
     local jsonBody=$2
 
     if [[ -z "$url" ]]; then
-        echo -e "${redColor}azureRestApi function need a url !${resetColor}"
+        writeErrorLog "azureRestApi function need a url !"
         return
     fi
 
@@ -45,11 +45,11 @@ function azureRestApi() {
     local fullUrl="https://dev.azure.com/$organization/$project/_apis/$url"
     local filePath="/tmp/$(randomAlphaNumeric)"
 
-    echo -e "fullUrl: $fullUrl\nmethod: $method\nBasic $(echo -n ":$token" | base64)\nfile path: $filePath\nbody: $jsonBody" > ~/git-simplifiers.log
+    writeLog "fullUrl: $fullUrl\nmethod: $method\nBasic $(echo -n ":$token" | base64 -w 0)\nfile path: $filePath\nbody: $jsonBody"
 
-    curl -s -X $method \
+    curl -L -s -X $method \
         -H "Content-Type: application/json" \
-        -H "Authorization: Basic $(echo -n ":$token" | base64)" \
+        -H "Authorization: Basic $(echo -n ":$token" | base64 -w 0)" \
         -d "${jsonBody:-}" \
         $fullUrl > $filePath
 
@@ -70,5 +70,5 @@ Examples:
 }
 
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
-    azureRestApi $*
+    azureRestApi "$@"
 fi

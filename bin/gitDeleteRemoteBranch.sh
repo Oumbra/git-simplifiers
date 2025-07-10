@@ -11,7 +11,7 @@ function gitDeleteRemoteBranch() {
   local branchName=$1
   
   if [[ -z $branchName ]]; then
-    echo -e "${redColor}gitDeleteRemoteBranch command need a branch name !${resetColor}"
+    writeErrorLog "gitDeleteRemoteBranch command need a branch name !"
     return
   fi
   
@@ -31,5 +31,5 @@ Examples:
 }
 
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
-    gitDeleteRemoteBranch $*
+    gitDeleteRemoteBranch "$@"
 fi

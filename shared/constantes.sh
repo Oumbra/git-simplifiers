@@ -1,7 +1,9 @@
 #!/bin/bash
 
-redColor='\e[31m'
-greenColor='\e[32m'
-cyanColor='\e[36m'
-resetColor='\e[0m'
-environments=("develop" "staging" "main")
+RED_COLOR='\e[31m'
+GREEN_COLOR='\e[32m'
+PURPLE_COLOR='\e[1;35m'
+CYAN_COLOR='\e[36m'
+RESET_COLOR='\e[0m'
+ENABLE_ENVIRONMENTS=("develop" "staging" "main")
+WORKITEM_KEYS='["id","state","title","type","link"]'

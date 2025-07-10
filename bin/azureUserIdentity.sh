@@ -7,10 +7,11 @@ source "$root_dir/shared/alias.sh"
 
 function azureUserIdentity() {
     if [[ $(needToCallHelpFunctionWithoutArgs $@) == 1 ]]; then azureUserIdentityHelp; return; fi
+    writeLog "$# inputs: $@"
 
     local email=$1
     if [[ $(echo "$email" | perl -ne '$count++ if /^[\w\-\.]+@(?:[\w-]+\.)+[\w-]{2,}$/; END { print $count || 0 }') == 0 ]]; then
-        echo -e "${redColor}The parameter does not conform to the email format!${resetColor}"
+        writeErrorLog "The parameter does not conform to the email format!"
         return 1
     fi
     
@@ -37,33 +38,37 @@ function azureUserIdentity() {
         "https://vssps.dev.azure.com/$organization/_apis/identities?api-version=7.2-preview.1&searchFilter=MailAddress&filterValue=$email"
     )
 
-    local id=$(echo $identity | jq -r '.value[0].id')
-    local descriptor=$(echo $identity | jq -r '.value[0].subjectDescriptor')
-    local displayName=$(echo $identity | jq -r '.value[0].providerDisplayName')
+    if [[ $(isJson $identity) == 1 ]]; then
+        echo ""
+    else 
+        local id=$(jqAlias "$identity" -r '.value[0].id')
+        local descriptor=$(jqAlias "$identity" -r '.value[0].subjectDescriptor')
+        local displayName=$(jqAlias "$identity" -r '.value[0].providerDisplayName')
 
-    echo "id: $id, descriptor: $descriptor, displayName: $displayName"
+        writeLog "identity: $identity, id: $id, descriptor: $descriptor, displayName: $displayName"
 
-    jq -c -n \
-        --arg id "$id" \
-        --arg displayName "$displayName" \
-        --arg uniqueName "$email" \
-        --arg descriptor "$descriptor" \
-        --arg imageUrl "https://dev.azure.com/$organization/_api/_common/identityImage?id=$id" \
-        --arg url "https://vssps.dev.azure.com/$organization/_apis/Identities/$id" \
-        --arg href "https://dev.azure.com/$organization/_apis/GraphProfile/MemberAvatars/$descriptor" \
-        '{
-            "id": $id,
-            "displayName": $displayName,
-            "uniqueName": $uniqueName,
-            "descriptor": $descriptor,
-            "imageUrl": $imageUrl,
-            "url": $url,
-            "_links": {
-                "avatar": {
-                    "href": $href
-                }
-            },
-        }'
+        jq -c -n \
+            --arg id "$id" \
+            --arg displayName "$displayName" \
+            --arg uniqueName "$email" \
+            --arg descriptor "$descriptor" \
+            --arg imageUrl "https://dev.azure.com/$organization/_api/_common/identityImage?id=$id" \
+            --arg url "https://vssps.dev.azure.com/$organization/_apis/Identities/$id" \
+            --arg href "https://dev.azure.com/$organization/_apis/GraphProfile/MemberAvatars/$descriptor" \
+            '{
+                "id": $id,
+                "displayName": $displayName,
+                "uniqueName": $uniqueName,
+                "descriptor": $descriptor,
+                "imageUrl": $imageUrl,
+                "url": $url,
+                "_links": {
+                    "avatar": {
+                        "href": $href
+                    }
+                },
+            }'
+    fi
 }
 
 function azureUserIdentityHelp() {
@@ -81,5 +86,5 @@ Examples:
 }
 
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
-    azureUserIdentity $*
+    azureUserIdentity "$@"
 fi

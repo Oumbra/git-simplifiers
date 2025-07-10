@@ -4,9 +4,12 @@ script_dir=$(dirname $0)
 root_dir=$(echo $script_dir | perl -pe 's/^(.+)\/bin.*$/$1/g')
 
 source "$root_dir/shared/alias.sh"
+source "$root_dir/bin/notionPage.sh"
 
-function azureGitCommit() {
-  if [[ $(needToCallHelpFunction "$@") == 1 ]]; then azureGitCommitHelp; return; fi
+function notionGitCommit() {
+  if [[ $(needToCallHelpFunction "$@") == 1 ]]; then notionGitCommitHelp; return; fi
+
+  writeLog "$# inputs: $@"
 
   local commandArgs="$@"
   while [[ $# -gt 0 ]]; do
@@ -37,7 +40,8 @@ function azureGitCommit() {
         shift # past argument
         ;;
       *|-*|--*)
-        if [[ $(echo "$1" | grep -Ec '^[0-9]+$') == 1 ]]; then 
+        # notion uuid || notion url || notion id
+        if [[ $(isNotionUid "$1") == 0 || $(isNotionUrl "$1") == 0 || $(isNotionId "$1") == 0 ]]; then 
           local workitemId=$1
           shift # past argument
         else
@@ -47,25 +51,28 @@ function azureGitCommit() {
         ;;
     esac
   done
-  
+    
   local env="$env"
   if [[ "$env" != "develop" && ! "$commandArgs" =~ "--env " && ! "$commandArgs" =~ "-e " ]]; then local env="develop"; fi
 
   if [[ -z $workitemId ]]; then
-    writeErrorLog "Need a workitem id !"
+    writeErrorLog "Need a task id !"
     return
   fi
   
   # recover ticket information on Azure
   echo -e "${CYAN_COLOR}Recover work item #${workitemId}${RESET_COLOR}" 
-  local workitem=$( azureWorkItem.sh $workitemId -s )
+  local workitem=$( notionPage.sh $workitemId -s )
   if [[ $(isJson "$workitem") == 1 ]]; then
     writeErrorLog "$workitem"
     return
   fi
 
+  writeLog "workitem: $workitem"
+
   local branchName=$( branchName.sh --workitem "$workitem" ${techArg:-} -e $env )
   local currentBranch=$(git symbolic-ref --short HEAD)
+  writeLog "branchName: $branchName, currentBranch: $currentBranch"
 
   if [[ "$currentBranch" != "$branchName" ]]; then
     echo -e "${CYAN_COLOR}Creating branch $branchName${RESET_COLOR}"
@@ -79,6 +86,7 @@ function azureGitCommit() {
   fi
 
   local commitMessage=$( commitStandardMessage.sh --workitem "$workitem" ${techArg:-} )
+  writeLog "commitMessage: $commitMessage"
 
   echo -e "${CYAN_COLOR}Creating commit $commitMessage${RESET_COLOR}"
   git add -A &> /dev/null
@@ -91,20 +99,20 @@ function azureGitCommit() {
     if [[ -z "$remoteBranchExists" ]]; then 
       git push -q --set-upstream origin "$branchName"
     else
-      git push -q --force
+      git push -q -u --force
     fi
   fi
 
   if [[ "${buildPullRequest:-false}" == true ]]; then
     echo -e "${CYAN_COLOR}Building pull request on $env${RESET_COLOR}"
-    azureCreatePullRequest.sh -e $env --workitem "$workitem" --azure-workitem
+    azureCreatePullRequest.sh -e $env --workitem "$workitem" 
   fi
 }
 
-function azureGitCommitHelp() {
+function notionGitCommitHelp() {
   echo -e "
-Usage: azureGitCommit [WORKITEM_ID] [OPTION...] [COMMAND]...
-Create normalized commit from azure workitem
+Usage: notionGitCommit [WORKITEM_ID] [OPTION...] [COMMAND]...
+Create normalized commit from notion task
 
 Options:
   -t, --tech                         Set tech flag for branch name and commit name
@@ -115,11 +123,11 @@ Options:
 Commands:
   -h, --help                         Displays this help and exists
 Examples:
-  azureGitCommit 2783
-  azureGitCommit 2783 -pr -e main
+  notionGitCommit 2783
+  notionGitCommit 2783 -pr -e main
 "
 }
 
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
-    azureGitCommit "$@"
+    notionGitCommit "$@"
 fi

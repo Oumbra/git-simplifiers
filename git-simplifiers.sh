@@ -1,10 +1,9 @@
 #!/bin/bash
 
-git_script_dir=$(dirname "${BASH_SOURCE:-$0}")
+script_dir=$(dirname $0)
+root_dir=$(echo $script_dir | perl -pe 's/^(.+)\/bin.*$/$1/g')
 
-source "$git_script_dir/scripts/shared/constantes.sh"
-source "$git_script_dir/scripts/git-aliases.sh"
-source "$git_script_dir/scripts/git-aliases-fn.sh"
+source "$root_dir/shared/alias.sh"
 
 # Git Cherry Pick Branch Environment
 function gcpbe() {

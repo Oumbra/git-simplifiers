@@ -1,5 +1,26 @@
 # Help scripts for Git usage
 
+### How to install
+
+#### Mac
+*edit file:* `~/.zshrc`
+
+*add follow line:*
+> export PATH="$PATH:[Path-to-git-simplifier-project]/bin"
+
+*in terminal, execute:*
+> chmod +x [Path-to-git-simplifier-project]/bin
+
+*execute:*
+> init-git-aliases.sh
+
+#### Windows 
+
+Add `[Path-to-git-simplifier-project]/bin` in Windows environment Path 	
+
+*Open a terminal and execute:*
+> init-git-aliases.sh
+
 ### Recommanded git aliases
 
 ```
@@ -47,11 +68,12 @@ list of shortcuts to speed up and simplify certain Git actions :
 - **grfs**: Rebase current branch from **staging** branch, after updating the **staging** branch
 - **grfm**: Rebase current branch from **main** branch, after updating the **main** branch
 
-- **gcb**: Remove current local branch
-- **gdb**: Remove remote branch
-- **grb**: Rename current or specified branch in local **and** remote
-- **gcpbe**: Cherry pick specified commit SHA to specified environnments
-- **removeLocalOrphanBranch**: Remove local branches if they don't exist remotely
+- **gitCleanBranch**: Remove current local branch
+- **gitCommit**: Create a branch and commit with a workitem id source
+- **gitDeleteLocalOrphanBranch**: Remove local branches if they don't exist remotely
+- **gitDeleteRemoteBranch**: Remove remote branch
+- **gitRenameBranch**: Rename current or specified branch in local **and** remote
+- ~~**gcpbe**: Cherry pick specified commit SHA to specified environnments~~
 
 ### Azure
 
@@ -66,3 +88,5 @@ This token must be have rights :
 - Member Entitlement Management (Read)
 - Pull Request Threads (Read & write)
 - Work Items (Read, write & mange)
+
+- **azureCreatePullRequest**: Create a pull request from workitem

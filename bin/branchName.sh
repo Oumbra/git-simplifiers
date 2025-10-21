@@ -55,7 +55,7 @@ function branchName() {
     "BUG") local branchType="fix";;
     *) 
       if [[ "${isTechWork:-false}" == true ]]; then local branchType="tech" 
-      else local branchType="f"
+      else local branchType="feature"
       fi
     ;;
   esac

@@ -40,6 +40,8 @@ Add `[Path-to-git-simplifier-project]/bin` in Windows environment Path
  	rbc = rebase --continue
  	cp = cherry-pick
     cpc = cherry-pick --continue
+	mg	= merge
+	mgc	= merge --continue
 ```
 
 ### Git utils
@@ -49,6 +51,7 @@ list of shortcuts to speed up and simplify certain Git actions :
 - **glo**: Git log oneline 
 - **gco**: Moving to specified branch
 - **gbr**: Show locales branches
+- **gbrd**: Delete locales branches
 - **gpl**: Git pull
 - **gcd**: Move to **develop** branch, pull it and fecth
 - **gcs**: Move to **staging** branch, pull it and fecth
@@ -57,8 +60,9 @@ list of shortcuts to speed up and simplify certain Git actions :
 - **grd**: Rebase current branch from **develop** branch
 - **grs**: Rebase current branch from **staging** branch
 - **grm**: Rebase current branch from **main** branch
-- **grbc**: Continue current rebase # /!\ evol to no edit /!\
-- **gcpc**: Continue current cherry-pick  # /!\ evol to no edit /!\
+- **grbc**: Continue current rebase
+- **gcpc**: Continue current cherry-pick
+- **gmgc**: Continue current merge
 - **gp**: Push current branch to remote (Create only)
 - **gpf**: Push **_force_** current branch to remote
 - **ga**: Amend commit of current branch

@@ -25,6 +25,7 @@ Add `[Path-to-git-simplifier-project]/bin` in Windows environment Path
 
 ```
 [alias]
+	fch = fetch --prune
 	co = checkout
 	cob = checkout -b
  	br = branch
